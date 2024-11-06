@@ -1,6 +1,4 @@
-# variables.tf
 variable "ecr_config" {
-  description = "Configuración para los repositorios ECR"
   type = list(object({
     force_delete = bool
     image_tag_mutability = string
@@ -11,9 +9,9 @@ variable "ecr_config" {
     image_scanning_configuration = list(object({
       scan_on_push = string
     }))
+    ticket         = string
     application_id = string
     accessclass    = string
-    # Agregamos campo opcional para lifecycle rules
     lifecycle_rules = optional(list(object({
       rulePriority = number
       description  = string

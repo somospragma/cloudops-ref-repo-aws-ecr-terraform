@@ -37,14 +37,28 @@ resource "aws_ecr_repository" "ecr_repository" {
 }
 
 resource "aws_ecr_lifecycle_policy" "lifecycle_policy" {
-  provider = aws.project
   for_each = {
     for repo in var.ecr_config : repo.application_id => repo
-    if length(repo.lifecycle_rules) > 0  # Solo crea la política si hay reglas definidas
+    if length(repo.lifecycle_rules) > 0
   }
   
   repository = aws_ecr_repository.ecr_repository[each.key].name
+  
   policy = jsonencode({
-    rules = each.value.lifecycle_rules
+    rules = [
+      for rule in each.value.lifecycle_rules : {
+        rulePriority = rule.rulePriority
+        description  = rule.description
+        selection = {
+          tagStatus      = rule.selection.tagStatus
+          countType      = rule.selection.countType
+          countUnit      = "days"           # Agregamos esta unidad requerida
+          countNumber    = rule.selection.countNumber
+        }
+        action = {
+          type = rule.action.type
+        }
+      }
+    ]
   })
 }
