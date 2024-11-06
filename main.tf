@@ -8,7 +8,7 @@ resource "aws_ecr_repository" "ecr_repository" {
     for repo in var.ecr_config : repo.application_id => repo
   }
   
-  name                 = join("-", tolist([var.client, var.project, var.environment, each.key, "ecr", var.service]))
+  name                 = join("-", tolist([var.client, var.project, var.environment, each.key, "ecr"]))
   force_delete         = each.value.force_delete
   image_tag_mutability = each.value.image_tag_mutability
 
@@ -28,7 +28,7 @@ resource "aws_ecr_repository" "ecr_repository" {
   }
 
   tags = {
-    Name           = join("-", tolist([var.client, var.project, var.environment, each.key, "ecr", var.service])),
+    Name           = join("-", tolist([var.client, var.project, var.environment, each.key, "ecr"])),
     application_id = each.value.application_id,
     environment    = var.environment,
     service        = var.service,
