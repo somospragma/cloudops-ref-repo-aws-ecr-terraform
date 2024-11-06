@@ -1,5 +1,6 @@
 # main.tf
 resource "aws_ecr_repository" "ecr_repository" {
+  provider = aws.project
   # checkov:skip=CKV_AWS_136: Encryption is sent as a variable
   # checkov:skip=CKV_AWS_51: validation is sent as a variable
   # checkov:skip=CKV_AWS_163: validation is sent as a variable
@@ -37,6 +38,7 @@ resource "aws_ecr_repository" "ecr_repository" {
 }
 
 resource "aws_ecr_lifecycle_policy" "lifecycle_policy" {
+  provider = aws.project
   for_each = {
     for repo in var.ecr_config : repo.application_id => repo
     if length(repo.lifecycle_rules) > 0  # Solo crea la política si hay reglas definidas
