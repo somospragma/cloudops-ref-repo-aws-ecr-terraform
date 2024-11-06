@@ -11,7 +11,6 @@ variable "ecr_config" {
     image_scanning_configuration = list(object({
       scan_on_push = string
     }))
-    ticket         = string
     application_id = string
     accessclass    = string
     # Agregamos campo opcional para lifecycle rules
