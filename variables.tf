@@ -9,16 +9,17 @@ variable "ecr_config" {
     image_scanning_configuration = list(object({
       scan_on_push = string
     }))
+    ticket         = string
     application_id = string
     accessclass    = string
     lifecycle_rules = optional(list(object({
       rulePriority = number
       description  = string
       selection = object({
-        tagStatus     = string
-        countType     = string
-        countNumber   = number
-        tagPrefixList = optional(list(string))
+        tagStatus   = string
+        countType   = string
+        countUnit   = string
+        countNumber = number
       })
       action = object({
         type = string
@@ -26,7 +27,6 @@ variable "ecr_config" {
     })), [])
   }))
 }
-
 variable "service" {
   type        = string
   description = "Nombre del servicio"

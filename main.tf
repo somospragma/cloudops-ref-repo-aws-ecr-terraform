@@ -51,10 +51,10 @@ resource "aws_ecr_lifecycle_policy" "lifecycle_policy" {
         rulePriority = rule.rulePriority
         description  = rule.description
         selection = {
-          tagStatus      = rule.selection.tagStatus
-          countType      = rule.selection.countType
-          countUnit      = "days"           # Agregamos esta unidad requerida
-          countNumber    = rule.selection.countNumber
+          tagStatus   = rule.selection.tagStatus
+          countType   = rule.selection.countType
+          countUnit   = rule.selection.countUnit
+          countNumber = rule.selection.countNumber
         }
         action = {
           type = rule.action.type
