@@ -35,7 +35,7 @@ resource "aws_ecr_repository" "ecr_repository" {
     functionality   = each.value.functionality,
     environment     = var.environment,
     application     = var.application,
-    access_class    = each.value.access_class
+    access_type     = each.value.access_type
   }
 }
 

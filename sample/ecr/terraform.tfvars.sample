@@ -30,7 +30,7 @@ ecr_config = [
                 scan_on_push = "true"
             }
         ]
-        access_class = "private"
+        access_type = "private"
         # Lifecycle policy to remove old images
         lifecycle_rules = [
             {

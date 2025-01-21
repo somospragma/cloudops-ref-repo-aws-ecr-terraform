@@ -53,7 +53,7 @@ variable "ecr_config" {
       scan_on_push = string
     }))
     functionality = string
-    access_class    = string
+    access_type    = string
     lifecycle_rules = optional(list(object({
       rulePriority = number
       description  = string
@@ -77,7 +77,7 @@ variable "ecr_config" {
     - image_scanning_configuration:
       - scan_on_push: (string) Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false).
     - functionality: (string) Functionality name.
-    - access_class: (string) ??????????
+    - access_type: (string) Repository access type.
     - lifecycle_rules: (optional, (list(object))) Policy to remove old images
       - rulePriority: (number) The AWS ECR API seems to reorder rules based on rulePriority. If you define multiple rules that are not sorted in ascending rulePriority order in the Terraform code, the resource will be flagged for recreation every terraform plan.
       - description: (string) Policy description
