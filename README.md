@@ -50,7 +50,7 @@ Consulta a continuación la fecha y los resultados de nuestro escaneo de segurid
 Este módulo requiere la configuración de un provider específico para el proyecto. Debe configurarse de la siguiente manera:
 
 ```hcl
-sample/vpc/providers.tf
+sample/ecr/providers.tf
 provider "aws" {
   alias = "alias01"
   # ... otras configuraciones del provider
@@ -69,7 +69,7 @@ module "ecr" {
 ## Uso del Módulo:
 
 ```hcl
-module "vpc" {
+module "ecr" {
   source = ""
   
   providers = {
