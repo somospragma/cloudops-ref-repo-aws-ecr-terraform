@@ -51,7 +51,7 @@ resource "aws_ecr_lifecycle_policy" "lifecycle_policy" {
   policy = jsonencode({
     rules = [
       for rule in each.value.lifecycle_rules : {
-        rule_priority = rule.rule_priority
+        rulePriority = rule.rulePriority
         description   = rule.description
         selection     = {
           tagStatus   = rule.selection.tagStatus

@@ -34,7 +34,7 @@ ecr_config = [
         # Lifecycle policy to remove old images
         lifecycle_rules = [
             {
-                rule_priority = 1
+                rulePriority = 1
                 description  = "Remove images older than 180 days"
                 selection = {
                     tagStatus   = "any"

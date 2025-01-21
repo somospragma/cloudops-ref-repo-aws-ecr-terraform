@@ -40,7 +40,7 @@ variable "ecr_config" {
     functionality = string
     access_class    = string
     lifecycle_rules = optional(list(object({
-      rule_priority = number
+      rulePriority = number
       description  = string
       selection = object({
         tagStatus   = string
@@ -64,7 +64,7 @@ variable "ecr_config" {
     - functionality: (string) Functionality name.
     - access_class: (string) Repository access type.
     - lifecycle_rules: (optional, (list(object))) Policy to remove old images
-      - rule_priority: (number) The AWS ECR API seems to reorder rules based on rulePriority. If you define multiple rules that are not sorted in ascending rulePriority order in the Terraform code, the resource will be flagged for recreation every terraform plan.
+      - rulePriority: (number) The AWS ECR API seems to reorder rules based on rulePriority. If you define multiple rules that are not sorted in ascending rulePriority order in the Terraform code, the resource will be flagged for recreation every terraform plan.
       - description: (string) Policy description
       - selection: (object)
         - tagStatus: (string) Determines whether the lifecycle policy rule that you are adding specifies a tag for an image. Acceptable options are tagged, untagged, or any. If you specify any, then all images have the rule evaluated against them. If you specify tagged, then you must also specify a tagPrefixList value. If you specify untagged, then you must omit tagPrefixList.
