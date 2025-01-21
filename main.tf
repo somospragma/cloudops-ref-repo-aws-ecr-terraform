@@ -1,14 +1,17 @@
-# main.tf
+###########################################
+########### ECR Resources #################
+###########################################
+
 resource "aws_ecr_repository" "ecr_repository" {
   provider = aws.project
   # checkov:skip=CKV_AWS_136: Encryption is sent as a variable
   # checkov:skip=CKV_AWS_51: validation is sent as a variable
   # checkov:skip=CKV_AWS_163: validation is sent as a variable
   for_each = {
-    for repo in var.ecr_config : repo.application_id => repo
+    for repo in var.ecr_config : repo.functionality => repo
   }
   
-  name                 = join("-", tolist([var.client, var.project, var.environment, each.key, "ecr"]))
+  name                 = join("-", tolist([var.client, var.project, var.environment, "ecr", var.application, each.key]))
   force_delete         = each.value.force_delete
   image_tag_mutability = each.value.image_tag_mutability
 
@@ -28,11 +31,11 @@ resource "aws_ecr_repository" "ecr_repository" {
   }
 
   tags = {
-    Name           = join("-", tolist([var.client, var.project, var.environment, each.key, "ecr"])),
-    application_id = each.value.application_id,
-    environment    = var.environment,
-    service        = var.service,
-    accessclass    = each.value.accessclass
+    Name            = join("-", tolist([var.client, var.project, var.environment, "ecr", var.application, each.key])),
+    functionality   = each.value.functionality,
+    environment     = var.environment,
+    application     = var.application,
+    access_class    = each.value.access_class
   }
 }
 
@@ -48,9 +51,9 @@ resource "aws_ecr_lifecycle_policy" "lifecycle_policy" {
   policy = jsonencode({
     rules = [
       for rule in each.value.lifecycle_rules : {
-        rulePriority = rule.rulePriority
-        description  = rule.description
-        selection = {
+        rule_priority = rule.rule_priority
+        description   = rule.description
+        selection     = {
           tagStatus   = rule.selection.tagStatus
           countType   = rule.selection.countType
           countUnit   = rule.selection.countUnit

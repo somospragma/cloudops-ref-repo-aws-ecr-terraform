@@ -1,0 +1,51 @@
+###########################################
+########## Common variables ###############
+###########################################
+
+profile     = "profile01"
+aws_region  = "us-east-1"
+environment = "dev"
+client      = "cliente01"
+project     = "proyecto01"
+application = "app01"
+common_tags = {
+  environment   = "dev"
+  project-name  = "proyecto01"
+  cost-center   = "xxx"
+  owner         = "xxx"
+  area          = "xxx"
+  provisioned   = "xxx"
+  datatype      = "xxx"
+}
+
+
+ecr_config = [
+    {
+        functionality           = "web01"
+        force_delete             = true
+        image_tag_mutability     = "MUTABLE"
+        encryption_configuration = []
+        image_scanning_configuration = [
+            {
+                scan_on_push = "true"
+            }
+        ]
+        access_class = "private"
+        # Lifecycle policy to remove old images
+        lifecycle_rules = [
+            {
+                rule_priority = 1
+                description  = "Remove images older than 180 days"
+                selection = {
+                    tagStatus   = "any"
+                    countType   = "sinceImagePushed"
+                    countUnit   = "days"
+                    countNumber = 180
+                }
+                action = {
+                    type = "expire"
+                }
+            }
+        ]
+    }
+]
