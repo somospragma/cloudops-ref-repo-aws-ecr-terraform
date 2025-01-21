@@ -42,7 +42,7 @@ resource "aws_ecr_repository" "ecr_repository" {
 resource "aws_ecr_lifecycle_policy" "lifecycle_policy" {
   provider = aws.project
   for_each = {
-    for repo in var.ecr_config : repo.application_id => repo
+    for repo in var.ecr_config : repo.functionality => repo
     if length(repo.lifecycle_rules) > 0
   }
   
