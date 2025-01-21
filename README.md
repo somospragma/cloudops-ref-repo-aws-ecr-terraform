@@ -14,7 +14,7 @@ El módulo cuenta con la siguiente estructura:
 
 ```bash
 cloudops-ref-repo-aws-vpc-terraform/
-└── sample/
+└── sample/ecr
     ├── data.tf
     ├── main.tf
     ├── outputs.tf
