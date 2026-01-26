@@ -1,119 +1,106 @@
-# **Módulo Terraform: cloudops-ref-repo-aws-ecr-terraform**
+# Módulo de Referencia: AWS ECR (Elastic Container Registry)
 
-## Descripción:
+## Descripción
 
-Este módulo facilita la creación de un Elastic Container Registry (ECR) completo en AWS, realizando las siguientes acciones:
+Este módulo de referencia facilita la creación y gestión de repositorios de Amazon Elastic Container Registry (ECR) siguiendo las mejores prácticas de seguridad y gobernanza definidas en las reglas PC-IAC.
 
-- Crear ECR
-- Crear política de ciclo de vida.
+### Características Principales
 
-Consulta CHANGELOG.md para la lista de cambios de cada versión. *Recomendamos encarecidamente que en tu código fijes la versión exacta que estás utilizando para que tu infraestructura permanezca estable y actualices las versiones de manera sistemática para evitar sorpresas.*
+- ✅ Creación de repositorios ECR con nomenclatura estándar
+- ✅ Cifrado en reposo (AES256 o KMS)
+- ✅ Escaneo de imágenes habilitado por defecto
+- ✅ Políticas de ciclo de vida configurables
+- ✅ Etiquetado automático con variables de gobernanza
+- ✅ Soporte para múltiples repositorios mediante `map(object)`
 
 ## Estructura del Módulo
-El módulo cuenta con la siguiente estructura:
 
-```bash
-cloudops-ref-repo-aws-vpc-terraform/
-└── sample/
-    ├── data.tf
-    ├── main.tf
-    ├── outputs.tf
-    ├── providers.tf
-    ├── terraform.tfvars.sample
-    └── variables.tf
+```
+cloudops-ref-repo-aws-ecr-terraform/
 ├── .gitignore
 ├── CHANGELOG.md
+├── README.md
 ├── data.tf
+├── locals.tf
 ├── main.tf
 ├── outputs.tf
 ├── providers.tf
-├── README.md
 ├── variables.tf
+├── versions.tf
+└── sample/
+    ├── README.md
+    ├── data.tf
+    ├── locals.tf
+    ├── main.tf
+    ├── outputs.tf
+    ├── providers.tf
+    ├── terraform.tfvars
+    └── variables.tf
 ```
 
-- Los archivos principales del módulo (`data.tf`, `main.tf`, `outputs.tf`, `variables.tf`, `providers.tf`) se encuentran en el directorio raíz.
-- `CHANGELOG.md` y `README.md` también están en el directorio raíz para fácil acceso.
-- La carpeta `sample/` contiene un ejemplo de implementación del módulo.
+## Requisitos
 
-## Seguridad & Cumplimiento
- 
-Consulta a continuación la fecha y los resultados de nuestro escaneo de seguridad y cumplimiento.
- 
-<!-- BEGIN_BENCHMARK_TABLE -->
-| Benchmark | Date | Version | Description | 
-| --------- | ---- | ------- | ----------- | 
-| ![checkov](https://img.shields.io/badge/checkov-passed-green) | 2023-09-20 | 3.2.232 | Escaneo profundo del plan de Terraform en busca de problemas de seguridad y cumplimiento |
-<!-- END_BENCHMARK_TABLE -->
+| Nombre | Versión |
+|--------|---------|
+| terraform | >= 1.0.0 |
+| aws | >= 4.31.0 |
 
-## Provider Configuration
+## Providers
 
-Este módulo requiere la configuración de un provider específico para el proyecto. Debe configurarse de la siguiente manera:
+| Nombre | Alias | Descripción |
+|--------|-------|-------------|
+| aws | aws.project | Provider inyectado desde el módulo raíz |
 
-```hcl
-sample/vpc/providers.tf
-provider "aws" {
-  alias = "alias01"
-  # ... otras configuraciones del provider
-}
+## Recursos Creados
 
-sample/ecr/main.tf
-module "ecr" {
-  source = ""
-  providers = {
-    aws.project = aws.alias01
-  }
-  # ... resto de la configuración
-}
-```
+| Tipo | Descripción |
+|------|-------------|
+| `aws_ecr_repository` | Repositorio ECR con configuración de cifrado y escaneo |
+| `aws_ecr_lifecycle_policy` | Política de ciclo de vida para gestión de imágenes |
 
-## Uso del Módulo:
+## Uso del Módulo
+
+### Ejemplo Básico
 
 ```hcl
-module "vpc" {
-  source = ""
+module "ecr_repositories" {
+  source = "git::https://github.com/org/cloudops-ref-repo-aws-ecr-terraform.git?ref=v1.0.0"
   
   providers = {
-    aws.project = aws.project
+    aws.project = aws.principal
   }
-
-  # Common configuration
-  client        = "example"
-  project       = "example"
-  environment   = "dev"
-  aws_region    = "us-east-1"
-  common_tags = {
-      environment   = "dev"
-      project-name  = "proyecto01"
-      cost-center   = "xxx"
-      owner         = "xxx"
-      area          = "xxx"
-      provisioned   = "xxx"
-      datatype      = "xxx"
-  }
-
-  # ECR configuration
-  ecr_config = [
-    {
-      application_id           = "app01"
-      force_delete             = true
+  
+  # Variables de gobernanza (PC-IAC-002)
+  client      = "pragma"
+  project     = "ecommerce"
+  environment = "dev"
+  application = "backend"
+  
+  # Configuración de repositorios
+  ecr_config = {
+    "api" = {
+      functionality            = "api"
+      force_delete             = false
       image_tag_mutability     = "MUTABLE"
-      encryption_configuration = []
+      encryption_configuration = []  # AES256 por defecto
       image_scanning_configuration = [
         {
-          scan_on_push = "true"
+          scan_on_push = true
         }
       ]
-      accessclass = "private"
-      # Lifecycle policy to remove old images
+      access_class    = "private"
+      additional_tags = {
+        team = "backend"
+      }
       lifecycle_rules = [
         {
-          rulePriority = 1
-          description  = "Remove images older than 180 days"
+          rule_priority = 1
+          description   = "Remove untagged images older than 30 days"
           selection = {
-            tagStatus   = "any"
+            tagStatus   = "untagged"
             countType   = "sinceImagePushed"
             countUnit   = "days"
-            countNumber = 180
+            countNumber = 30
           }
           action = {
             type = "expire"
@@ -121,52 +108,200 @@ module "vpc" {
         }
       ]
     }
-  ]
+  }
 }
 ```
 
-## Requirements
+### Ejemplo con Cifrado KMS
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.31.0 |
+```hcl
+module "ecr_repositories" {
+  source = "git::https://github.com/org/cloudops-ref-repo-aws-ecr-terraform.git?ref=v1.0.0"
+  
+  providers = {
+    aws.project = aws.principal
+  }
+  
+  client      = "pragma"
+  project     = "ecommerce"
+  environment = "pdn"
+  application = "backend"
+  
+  ecr_config = {
+    "api" = {
+      functionality        = "api"
+      force_delete         = false
+      image_tag_mutability = "IMMUTABLE"  # Inmutable para producción
+      
+      # Cifrado con KMS
+      encryption_configuration = [
+        {
+          encryption_type = "KMS"
+          kms_key         = data.aws_kms_key.ecr.arn
+        }
+      ]
+      
+      image_scanning_configuration = [
+        {
+          scan_on_push = true
+        }
+      ]
+      
+      access_class = "private"
+      additional_tags = {
+        criticality = "high"
+      }
+      
+      lifecycle_rules = []
+    }
+  }
+}
+```
 
-## Providers
+## Inputs
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws.project"></a> [aws.project](#provider\_aws) | >= 4.31.0 |
+| Nombre | Descripción | Tipo | Requerido | Default |
+|--------|-------------|------|-----------|---------|
+| `client` | Nombre del cliente o unidad de negocio | `string` | Sí | - |
+| `project` | Nombre del proyecto | `string` | Sí | - |
+| `environment` | Ambiente de despliegue (dev, qa, pdn) | `string` | Sí | - |
+| `application` | Nombre de la aplicación | `string` | Sí | - |
+| `ecr_config` | Mapa de configuraciones de repositorios ECR | `map(object)` | Sí | - |
 
-## Resources
+### Estructura de `ecr_config`
 
-| Name | Type |
-|------|------|
-| [aws_ecr_repository.ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository) | resource |
-| [aws_ecr_lifecycle_policy.lifecycle_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_lifecycle_policy) | resource |
-
-## Variables
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="force_delete"></a> [force_delete](#input\force_delete) | Borrar repositorio (Incluso si contiene imágenes) | `bool` | n/a | yes |
-| <a name="image_tag_mutability"></a> [image_tag_mutability](#input\image_tag_mutability) | Configuración de mutabilidad de etiquetas para el repositorio | `string` | n/a | yes |
-| <a name="encryption_configuration.encryption_type"></a> [encryption_configuration.encryption_type](#input\encryption_configuration.encryption_type) | Tipo de cifrado | `string` | n/a | yes |
-| <a name="encryption_configuration.kms_key"></a> [encryption_configuration.kms_key](#input\encryption_configuration.kms_key) | ARN of the KMS | `string` | n/a | yes |
-| <a name="image_scanning_configuration.scan_on_push"></a> [image_scanning_configuration.scan_on_push](#input\image_scanning_configuration.scan_on_push) | Scan images after being pushed | `string` | n/a | yes |
-| <a name="application_id"></a> [application_id](#input\application_id) | Application name | `string` | n/a | yes |
-| <a name="accessclass"></a> [accessclass](#input\accessclass) | Acceso al repositorio | `string` | n/a | yes |
-| <a name="lifecycle_rules.rulePriority"></a> [lifecycle_rules.rulePriority](#input\lifecycle_rules.rulePriority) | Orden de aplicación de regla | `number` | n/a | no |
-| <a name="lifecycle_rules.description"></a> [lifecycle_rules.description](#input\lifecycle_rules.description) | Descripción de la regla | `string` | n/a | no |
-| <a name="lifecycle_rules.selection.tagStatus"></a> [lifecycle_rules.selection.tagStatus](#input\lifecycle_rules.selection.tagStatus) | Aplicar regla con un tag específico | `string` | n/a | no |
-| <a name="lifecycle_rules.selection.countType"></a> [lifecycle_rules.selection.countType](#input\lifecycle_rules.selection.countType) | Tipo de conteo | `string` | n/a | no |
-| <a name="lifecycle_rules.selection.contUnit"></a> [lifecycle_rules.selection.contUnit](#input\lifecycle_rules.selection.contUnit) | Unidad de días a contar | `string` | n/a | no |
-| <a name="lifecycle_rules.selection.countNumber"></a> [lifecycle_rules.selection.countNumber](#input\lifecycle_rules.selection.countNumber) | Número de conteo | `number` | n/a | no |
-
-
+```hcl
+map(object({
+  force_delete             = optional(bool, false)
+  image_tag_mutability     = optional(string, "MUTABLE")
+  encryption_configuration = optional(list(object({
+    encryption_type = string
+    kms_key         = optional(string, "")
+  })), [])
+  image_scanning_configuration = optional(list(object({
+    scan_on_push = bool
+  })), [])
+  functionality   = string
+  access_class    = optional(string, "private")
+  additional_tags = optional(map(string), {})
+  lifecycle_rules = optional(list(object({
+    rule_priority = number
+    description   = string
+    selection = object({
+      tagStatus   = string
+      countType   = string
+      countUnit   = optional(string, "")
+      countNumber = number
+    })
+    action = object({
+      type = string
+    })
+  })), [])
+}))
+```
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_ecr_info_repository_url"></a> [ecr_info.repository_url](#output\_ecr_info_repository_url) | URL del repositorio creado |
+| Nombre | Descripción | Tipo |
+|--------|-------------|------|
+| `repository_urls` | Mapa de URLs de repositorios por clave | `map(string)` |
+| `repository_arns` | Mapa de ARNs de repositorios por clave | `map(string)` |
+| `repository_names` | Mapa de nombres de repositorios por clave | `map(string)` |
+| `repository_registry_ids` | Mapa de IDs de registro por clave | `map(string)` |
+
+## Nomenclatura
+
+Los repositorios ECR siguen el patrón de nomenclatura estándar (PC-IAC-003):
+
+```
+{client}-{project}-{environment}-ecr-{application}-{functionality}
+```
+
+**Ejemplo:** `pragma-ecommerce-dev-ecr-backend-api`
+
+## Seguridad y Cumplimiento
+
+### Hardenizado de Seguridad (PC-IAC-020)
+
+Este módulo implementa las siguientes medidas de seguridad por defecto:
+
+- ✅ **Cifrado en reposo**: AES256 por defecto, con soporte para KMS
+- ✅ **Escaneo de imágenes**: Habilitado por defecto (`scan_on_push = true`)
+- ✅ **Acceso privado**: Repositorios privados por defecto
+- ✅ **Políticas de ciclo de vida**: Soporte para eliminación automática de imágenes antiguas
+
+### Validaciones
+
+El módulo incluye validaciones para:
+- Longitud de nombres de variables de gobernanza
+- Valores válidos para `environment` (dev, qa, pdn, prod)
+- Valores válidos para `image_tag_mutability` (MUTABLE, IMMUTABLE)
+- Presencia de `functionality` en cada configuración
+
+## Cumplimiento de Reglas PC-IAC
+
+Este módulo cumple con las siguientes reglas de gobernanza:
+
+| Regla | Descripción | Implementación |
+|-------|-------------|----------------|
+| PC-IAC-001 | Estructura de Módulo | 18 archivos obligatorios (10 raíz + 8 sample/) |
+| PC-IAC-002 | Variables | Validaciones, tipos explícitos, uso de `map(object)` |
+| PC-IAC-003 | Nomenclatura Estándar | Construcción en `locals.tf` con patrón estándar |
+| PC-IAC-004 | Etiquetas (Tagging) | Merge de Name y additional_tags |
+| PC-IAC-005 | Providers | Alias `aws.project` consumido desde el Root |
+| PC-IAC-006 | Versiones | `required_version >= 1.0.0`, provider >= 4.31.0 |
+| PC-IAC-007 | Outputs | Outputs granulares (URLs, ARNs, nombres) |
+| PC-IAC-009 | Tipos y Conversiones | Uso de `optional()`, validaciones de tipo |
+| PC-IAC-010 | For_Each | Uso de `for_each` con `map` para estabilidad |
+| PC-IAC-011 | Data Sources | Data sources solo en el Root (sample/) |
+| PC-IAC-012 | Locals | Centralización de nomenclatura y transformaciones |
+| PC-IAC-014 | Bloques Dinámicos | Uso de `dynamic` para configuraciones anidadas |
+| PC-IAC-020 | Hardenizado | Cifrado y escaneo habilitados por defecto |
+| PC-IAC-023 | Responsabilidad Única | Solo crea recursos ECR intrínsecos |
+| PC-IAC-026 | Patrón sample/ | Flujo tfvars → locals → main |
+
+## Decisiones de Diseño
+
+### Uso de `map(object)` en lugar de `list(object)`
+
+Se utiliza `map(object)` para la variable `ecr_config` (PC-IAC-002) para garantizar la estabilidad del estado de Terraform. Esto previene la destrucción y recreación de recursos cuando se modifica o elimina un elemento intermedio.
+
+### Cifrado por Defecto
+
+Si no se especifica `encryption_configuration`, el módulo aplica cifrado AES256 por defecto. Para usar KMS, se debe especificar explícitamente el tipo y el ARN de la clave.
+
+### Escaneo de Imágenes
+
+El escaneo de imágenes está habilitado por defecto (`scan_on_push = true`) como medida de seguridad. Esto puede deshabilitarse explícitamente si es necesario.
+
+### Políticas de Ciclo de Vida
+
+Las políticas de ciclo de vida son opcionales. Si no se especifican, no se crea el recurso `aws_ecr_lifecycle_policy`.
+
+## Ejemplo Completo
+
+Para un ejemplo funcional completo, consulta el directorio `sample/` que incluye:
+- Configuración de ejemplo en `terraform.tfvars`
+- Inyección dinámica de KMS key ARN
+- Múltiples repositorios con diferentes configuraciones
+- Políticas de ciclo de vida
+
+## Versionamiento
+
+Este módulo sigue [Semantic Versioning](https://semver.org/). Consulta el [CHANGELOG.md](./CHANGELOG.md) para ver el historial de cambios.
+
+## Contribución
+
+Para contribuir a este módulo, por favor:
+1. Asegúrate de que todos los cambios cumplan con las reglas PC-IAC
+2. Actualiza el CHANGELOG.md
+3. Ejecuta `terraform fmt` y `terraform validate`
+4. Actualiza la documentación si es necesario
+
+## Licencia
+
+Copyright © 2025 Pragma S.A.
+
+## Soporte
+
+Para soporte o preguntas, contacta al equipo de CloudOps.

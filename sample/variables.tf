@@ -1,0 +1,54 @@
+###########################################
+# Sample Variables
+###########################################
+
+variable "client" {
+  type        = string
+  description = "Client name or business unit identifier"
+}
+
+variable "project" {
+  type        = string
+  description = "Project name identifier"
+}
+
+variable "environment" {
+  type        = string
+  description = "Environment where resources will be deployed (dev, qa, pdn)"
+}
+
+variable "application" {
+  type        = string
+  description = "Application name identifier"
+}
+
+variable "ecr_config" {
+  type = map(object({
+    force_delete             = optional(bool, false)
+    image_tag_mutability     = optional(string, "MUTABLE")
+    encryption_configuration = optional(list(object({
+      encryption_type = string
+      kms_key         = optional(string, "")
+    })), [])
+    image_scanning_configuration = optional(list(object({
+      scan_on_push = bool
+    })), [])
+    functionality   = string
+    access_class    = optional(string, "private")
+    additional_tags = optional(map(string), {})
+    lifecycle_rules = optional(list(object({
+      rule_priority = number
+      description   = string
+      selection = object({
+        tagStatus   = string
+        countType   = string
+        countUnit   = optional(string, "")
+        countNumber = number
+      })
+      action = object({
+        type = string
+      })
+    })), [])
+  }))
+  description = "Map of ECR repository configurations"
+}
