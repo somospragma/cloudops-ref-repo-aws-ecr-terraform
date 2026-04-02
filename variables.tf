@@ -73,6 +73,19 @@ variable "ecr_config" {
         type = string
       })
     })), [])
+    repository_policy = optional(object({
+      principals = list(string)
+      actions    = optional(list(string), [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability"
+      ])
+      conditions = optional(list(object({
+        test     = string
+        variable = string
+        values   = list(string)
+      })), [])
+    }), null)
   }))
   
   description = <<-EOF
@@ -98,6 +111,13 @@ variable "ecr_config" {
         - countNumber: (number) Count number threshold.
       - action: (object)
         - type: (string) Action type. Valid value: expire.
+    - repository_policy: (optional, object) IAM policy for cross-account or fine-grained access control. Defaults to null (no policy created).
+      - principals: (list(string)) List of AWS principal ARNs to grant access.
+      - actions: (optional, list(string)) ECR actions to allow. Defaults to GetDownloadUrlForLayer, BatchGetImage, BatchCheckLayerAvailability.
+      - conditions: (optional, list(object)) IAM policy conditions.
+        - test: (string) Condition operator (e.g., StringEquals, ArnLike).
+        - variable: (string) Condition key (e.g., aws:PrincipalOrgID).
+        - values: (list(string)) Condition values.
   EOF
   
   validation {

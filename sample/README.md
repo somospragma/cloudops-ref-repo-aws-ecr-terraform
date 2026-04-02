@@ -51,3 +51,4 @@ terraform destroy
 - Este ejemplo utiliza cifrado AES256 por defecto
 - El escaneo de imágenes está habilitado por defecto
 - Las políticas de ciclo de vida son opcionales
+- Las políticas de acceso (`repository_policy`) son opcionales y permiten control cross-account y fine-grained con condiciones IAM

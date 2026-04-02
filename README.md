@@ -12,6 +12,7 @@ Este módulo de referencia facilita la creación y gestión de repositorios de A
 - ✅ Políticas de ciclo de vida configurables
 - ✅ Etiquetado automático con variables de gobernanza
 - ✅ Soporte para múltiples repositorios mediante `map(object)`
+- ✅ Políticas de acceso a repositorios (cross-account y fine-grained)
 
 ## Estructura del Módulo
 
@@ -56,6 +57,7 @@ cloudops-ref-repo-aws-ecr-terraform/
 | Tipo | Descripción |
 |------|-------------|
 | `aws_ecr_repository` | Repositorio ECR con configuración de cifrado y escaneo |
+| `aws_ecr_repository_policy` | Política IAM de acceso al repositorio (cross-account, fine-grained) |
 | `aws_ecr_lifecycle_policy` | Política de ciclo de vida para gestión de imágenes |
 
 ## Uso del Módulo
@@ -116,7 +118,7 @@ module "ecr_repositories" {
 
 ```hcl
 module "ecr_repositories" {
-  source = "git::https://github.com/org/cloudops-ref-repo-aws-ecr-terraform.git?ref=v1.0.0"
+  source = "git::https://github.com/org/cloudops-ref-repo-aws-ecr-terraform.git?ref=v1.1.0"
   
   providers = {
     aws.project = aws.principal
@@ -152,6 +154,69 @@ module "ecr_repositories" {
         criticality = "high"
       }
       
+      lifecycle_rules = []
+    }
+  }
+}
+```
+
+### Ejemplo con Política de Acceso Cross-Account
+
+```hcl
+module "ecr_repositories" {
+  source = "git::https://github.com/org/cloudops-ref-repo-aws-ecr-terraform.git?ref=v1.1.0"
+  
+  providers = {
+    aws.project = aws.principal
+  }
+  
+  client      = "pragma"
+  project     = "ecommerce"
+  environment = "pdn"
+  application = "backend"
+  
+  ecr_config = {
+    "api" = {
+      functionality        = "api"
+      image_tag_mutability = "IMMUTABLE"
+      
+      # Política de acceso cross-account
+      repository_policy = {
+        principals = [
+          "arn:aws:iam::111111111111:root",
+          "arn:aws:iam::222222222222:root"
+        ]
+        # actions usa el default: GetDownloadUrlForLayer, BatchGetImage, BatchCheckLayerAvailability
+      }
+      
+      lifecycle_rules = []
+    }
+    
+    "worker" = {
+      functionality = "worker"
+      
+      # Política con condiciones (solo desde la organización)
+      repository_policy = {
+        principals = ["*"]
+        actions = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        conditions = [
+          {
+            test     = "StringEquals"
+            variable = "aws:PrincipalOrgID"
+            values   = ["o-xxxxxxxxxxxx"]
+          }
+        ]
+      }
+      
+      lifecycle_rules = []
+    }
+    
+    "cron" = {
+      functionality = "cron"
+      # Sin repository_policy → no se crea política de acceso
       lifecycle_rules = []
     }
   }
@@ -197,6 +262,19 @@ map(object({
       type = string
     })
   })), [])
+  repository_policy = optional(object({
+    principals = list(string)
+    actions    = optional(list(string), [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability"
+    ])
+    conditions = optional(list(object({
+      test     = string
+      variable = string
+      values   = list(string)
+    })), [])
+  }), null)
 }))
 ```
 
@@ -208,6 +286,7 @@ map(object({
 | `repository_arns` | Mapa de ARNs de repositorios por clave | `map(string)` |
 | `repository_names` | Mapa de nombres de repositorios por clave | `map(string)` |
 | `repository_registry_ids` | Mapa de IDs de registro por clave | `map(string)` |
+| `repository_policy_registry_ids` | Mapa de IDs de registro para repositorios con políticas de acceso | `map(string)` |
 
 ## Nomenclatura
 
@@ -229,6 +308,7 @@ Este módulo implementa las siguientes medidas de seguridad por defecto:
 - ✅ **Escaneo de imágenes**: Habilitado por defecto (`scan_on_push = true`)
 - ✅ **Acceso privado**: Repositorios privados por defecto
 - ✅ **Políticas de ciclo de vida**: Soporte para eliminación automática de imágenes antiguas
+- ✅ **Políticas de acceso**: Control de acceso cross-account y fine-grained con soporte para condiciones IAM
 
 ### Validaciones
 
@@ -277,6 +357,13 @@ El escaneo de imágenes está habilitado por defecto (`scan_on_push = true`) com
 ### Políticas de Ciclo de Vida
 
 Las políticas de ciclo de vida son opcionales. Si no se especifican, no se crea el recurso `aws_ecr_lifecycle_policy`.
+
+### Políticas de Acceso a Repositorios
+
+Las políticas de acceso (`repository_policy`) son opcionales. Si no se especifican, no se crea el recurso `aws_ecr_repository_policy`. Esto permite:
+- Acceso cross-account a repositorios específicos
+- Control fine-grained con condiciones IAM (por ejemplo, restringir por organización con `aws:PrincipalOrgID`)
+- Acciones por defecto limitadas a lectura de imágenes (`GetDownloadUrlForLayer`, `BatchGetImage`, `BatchCheckLayerAvailability`)
 
 ## Ejemplo Completo
 

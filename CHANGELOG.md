@@ -34,8 +34,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Planeado
-- Soporte para políticas de permisos de repositorio
 - Integración con AWS Organizations
 - Soporte para replicación cross-region
+
+## [1.1.0] - 2025-04-02
+
+### Añadido
+- Soporte para `aws_ecr_repository_policy` con control de acceso cross-account y fine-grained
+- Campo `repository_policy` en `ecr_config` con principals, actions y conditions
+- Output `repository_policy_registry_ids` para repositorios con políticas de acceso
+- Ejemplo de uso con política cross-account y condiciones IAM en README.md
+- Documentación de decisiones de diseño para políticas de acceso
+
+### Características de Seguridad
+- Acciones por defecto limitadas a lectura de imágenes (principio de menor privilegio)
+- Soporte para condiciones IAM (e.g., restricción por organización con `aws:PrincipalOrgID`)
+- Creación condicional: la política solo se crea cuando se define explícitamente
 
 
