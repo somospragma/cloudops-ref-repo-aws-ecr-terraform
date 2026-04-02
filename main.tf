@@ -56,6 +56,40 @@ resource "aws_ecr_repository" "this" {
   )
 }
 
+# ECR Repository Policy
+# Referencia: PC-IAC-010 (for_each condicional), PC-IAC-020 (Control de acceso)
+resource "aws_ecr_repository_policy" "this" {
+  provider = aws.project
+
+  # PC-IAC-010: for_each condicional solo para repositorios con repository_policy
+  for_each = {
+    for key, config in var.ecr_config : key => config
+    if config.repository_policy != null
+  }
+
+  repository = aws_ecr_repository.this[each.key].name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      merge(
+        {
+          Sid       = "ECRRepositoryPolicy"
+          Effect    = "Allow"
+          Principal = { AWS = each.value.repository_policy.principals }
+          Action    = each.value.repository_policy.actions
+        },
+        length(each.value.repository_policy.conditions) > 0 ? {
+          Condition = {
+            for cond in each.value.repository_policy.conditions :
+            cond.test => { (cond.variable) = cond.values }
+          }
+        } : {}
+      )
+    ]
+  })
+}
+
 # ECR Lifecycle Policy
 # Referencia: PC-IAC-010 (for_each condicional)
 resource "aws_ecr_lifecycle_policy" "this" {

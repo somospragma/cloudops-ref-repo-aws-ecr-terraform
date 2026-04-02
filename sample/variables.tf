@@ -49,6 +49,19 @@ variable "ecr_config" {
         type = string
       })
     })), [])
+    repository_policy = optional(object({
+      principals = list(string)
+      actions    = optional(list(string), [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability"
+      ])
+      conditions = optional(list(object({
+        test     = string
+        variable = string
+        values   = list(string)
+      })), [])
+    }), null)
   }))
   description = "Map of ECR repository configurations"
 }
