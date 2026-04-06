@@ -7,8 +7,8 @@ locals {
   governance_prefix = "${var.client}-${var.project}-${var.environment}"
   
   # Construcción de nombres de repositorios ECR con nomenclatura estándar
-  # Patrón: {client}-{project}-{environment}-ecr-{application}-{functionality}
+  # Patrón: {client}-{project}-{environment}-ecr-{key}
   ecr_repository_names = {
-    for key, config in var.ecr_config : key => "${local.governance_prefix}-ecr-${var.application}-${config.functionality}"
+    for key, config in var.ecr_config : key => "${local.governance_prefix}-ecr-${key}"
   }
 }

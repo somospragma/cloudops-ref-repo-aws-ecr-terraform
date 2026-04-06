@@ -32,16 +32,6 @@ variable "environment" {
   }
 }
 
-variable "application" {
-  type        = string
-  description = "Application name identifier"
-  
-  validation {
-    condition     = length(var.application) > 0 && length(var.application) <= 20
-    error_message = "Application name must be between 1 and 20 characters"
-  }
-}
-
 ###########################################
 ############ ECR Variables ################
 ###########################################
@@ -57,7 +47,7 @@ variable "ecr_config" {
     image_scanning_configuration = optional(list(object({
       scan_on_push = bool
     })), [])
-    functionality   = string
+    functionality   = optional(string, "")
     access_class    = optional(string, "private")
     additional_tags = optional(map(string), {})
     lifecycle_rules = optional(list(object({
@@ -131,13 +121,5 @@ variable "ecr_config" {
       contains(["MUTABLE", "IMMUTABLE"], config.image_tag_mutability)
     ])
     error_message = "image_tag_mutability must be either MUTABLE or IMMUTABLE"
-  }
-  
-  validation {
-    condition = alltrue([
-      for key, config in var.ecr_config :
-      length(config.functionality) > 0
-    ])
-    error_message = "functionality must not be empty for any repository"
   }
 }

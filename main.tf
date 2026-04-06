@@ -45,13 +45,7 @@ resource "aws_ecr_repository" "this" {
 
   # PC-IAC-004: Etiquetas con merge de Name y additional_tags
   tags = merge(
-    {
-      Name          = local.ecr_repository_names[each.key]
-      functionality = each.value.functionality
-      environment   = var.environment
-      application   = var.application
-      access_class  = each.value.access_class
-    },
+    { Name = local.ecr_repository_names[each.key] },
     each.value.additional_tags
   )
 }
