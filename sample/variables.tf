@@ -17,11 +17,6 @@ variable "environment" {
   description = "Environment where resources will be deployed (dev, qa, pdn)"
 }
 
-variable "application" {
-  type        = string
-  description = "Application name identifier"
-}
-
 variable "ecr_config" {
   type = map(object({
     force_delete             = optional(bool, false)
@@ -33,7 +28,7 @@ variable "ecr_config" {
     image_scanning_configuration = optional(list(object({
       scan_on_push = bool
     })), [])
-    functionality   = string
+    functionality   = optional(string, "")
     access_class    = optional(string, "private")
     additional_tags = optional(map(string), {})
     lifecycle_rules = optional(list(object({

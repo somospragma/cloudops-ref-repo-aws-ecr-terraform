@@ -37,6 +37,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Integración con AWS Organizations
 - Soporte para replicación cross-region
 
+## [1.2.0] - 2026-04-06
+
+### Changed
+- **BREAKING**: Removed `application` variable — naming now uses map key directly
+- **BREAKING**: Naming pattern changed from `{client}-{project}-{environment}-ecr-{application}-{functionality}` to `{client}-{project}-{environment}-ecr-{key}`
+- Tags cleaned per PC-IAC-004: removed hardcoded `functionality`, `environment`, `application`, `access_class` from resource tags (now come from provider `default_tags` or `additional_tags`)
+- `functionality` is now optional (kept for backward compatibility in tfvars but not used in naming)
+
+### Migration Guide
+- Remove `application` parameter from module invocation
+- Existing ECR repositories will be recreated due to name change
+- Move any needed tags (`functionality`, `access_class`) to `additional_tags`
+
 ## [1.1.0] - 2025-04-02
 
 ### Añadido

@@ -76,7 +76,6 @@ module "ecr_repositories" {
   client      = "pragma"
   project     = "ecommerce"
   environment = "dev"
-  application = "backend"
   
   # Configuración de repositorios
   ecr_config = {
@@ -127,7 +126,6 @@ module "ecr_repositories" {
   client      = "pragma"
   project     = "ecommerce"
   environment = "pdn"
-  application = "backend"
   
   ecr_config = {
     "api" = {
@@ -173,7 +171,6 @@ module "ecr_repositories" {
   client      = "pragma"
   project     = "ecommerce"
   environment = "pdn"
-  application = "backend"
   
   ecr_config = {
     "api" = {
@@ -230,7 +227,6 @@ module "ecr_repositories" {
 | `client` | Nombre del cliente o unidad de negocio | `string` | Sí | - |
 | `project` | Nombre del proyecto | `string` | Sí | - |
 | `environment` | Ambiente de despliegue (dev, qa, pdn) | `string` | Sí | - |
-| `application` | Nombre de la aplicación | `string` | Sí | - |
 | `ecr_config` | Mapa de configuraciones de repositorios ECR | `map(object)` | Sí | - |
 
 ### Estructura de `ecr_config`
@@ -246,7 +242,7 @@ map(object({
   image_scanning_configuration = optional(list(object({
     scan_on_push = bool
   })), [])
-  functionality   = string
+  functionality   = optional(string, "")
   access_class    = optional(string, "private")
   additional_tags = optional(map(string), {})
   lifecycle_rules = optional(list(object({
@@ -293,10 +289,10 @@ map(object({
 Los repositorios ECR siguen el patrón de nomenclatura estándar (PC-IAC-003):
 
 ```
-{client}-{project}-{environment}-ecr-{application}-{functionality}
+{client}-{project}-{environment}-ecr-{key}
 ```
 
-**Ejemplo:** `pragma-ecommerce-dev-ecr-backend-api`
+**Ejemplo:** `pragma-ecommerce-dev-ecr-api`
 
 ## Seguridad y Cumplimiento
 

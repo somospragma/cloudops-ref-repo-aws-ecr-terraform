@@ -16,7 +16,6 @@ module "ecr_repositories" {
   client      = var.client
   project     = var.project
   environment = var.environment
-  application = var.application
   
   # PC-IAC-026: Consumir configuración transformada desde locals
   ecr_config = local.ecr_config_transformed
